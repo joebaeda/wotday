@@ -1,0 +1,376 @@
+"use client"
+
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import { Label } from "./ui/label";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
+import { useViewer } from "../providers/FrameContextProvider";
+import useAnimationFrames from "@/hooks/useAnimationFrames";
+import html2canvas from "html2canvas";
+import GIF from "gif.js";
+import { BaseError, useAccount, useChainId, useConnect, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { wotdayAbi, wotdayAddress } from "@/lib/wotday";
+import { base } from "viem/chains";
+import utcDateTime from "@/lib/utcDateTime";
+import sdk from "@farcaster/frame-sdk";
+import { config } from "@/lib/config";
+
+export default function WotDayFormFrames() {
+    const [wordsText, setWordsText] = useState<string>("");
+    const [isCastSuccess, setIsCastSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isGIFLoading, setIsGIFLoading] = useState(false);
+    const [showError, setShowError] = useState(false);
+    const [showMintSuccess, setShowMintSuccess] = useState(false);
+    const [isCastLoading, setIsCastLoading] = useState(false);
+
+    const { pfpUrl, username, fid, added } = useViewer();
+    const { containerRef, rendererRef, particlesRef } = useAnimationFrames({
+        pfpUrl: pfpUrl as string,
+    });
+
+    const quoteCardRef = useRef<HTMLDivElement>(null);
+
+    const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+        setWordsText(e.target.value);
+    };
+
+    const chainId = useChainId();
+    const { connect } = useConnect()
+    const { isConnected } = useAccount();
+    const { data: wordsHash, error: wordsError, isPending: isWordsPending, writeContract: wordsWrite } = useWriteContract();
+
+    const { data: mintPrice } = useReadContract({
+        address: wotdayAddress as `0x${string}`,
+        abi: wotdayAbi,
+        chainId: base.id,
+        functionName: "mintPrice",
+    });
+
+    const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+        hash: wordsHash,
+    });
+
+    // Resize Three.js renderer dynamically
+    useEffect(() => {
+        const handleResize = () => {
+            if (rendererRef.current && containerRef.current) {
+                const { offsetWidth, offsetHeight } = containerRef.current;
+                rendererRef.current.setSize(offsetWidth, offsetHeight);
+            }
+        };
+
+        window.addEventListener("resize", handleResize);
+        handleResize(); // Trigger on mount
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+        };
+    }, [rendererRef, containerRef]);
+
+    // Basescan
+    const linkToBaseScan = useCallback((hash?: string) => {
+        if (hash) {
+            sdk.actions.openUrl(`https://basescan.org/tx/${hash}`);
+        }
+    }, []);
+
+    // Open Add Frame dialog
+    useEffect(() => {
+        if (!added) {
+            sdk.actions.addFrame()
+        }
+    })
+
+    useEffect(() => {
+        if (isConfirmed) {
+            setShowMintSuccess(true);
+        }
+    }, [isConfirmed]);
+
+    useEffect(() => {
+        if (wordsError) {
+            setShowError(true);
+        }
+    }, [wordsError]);
+
+
+    const sendWords = async (wordsText: string, embedUrl: string) => {
+        if (!wordsText) {
+            setError("Words text is required.");
+            return;
+        }
+        setError(null);
+
+        try {
+            const message = { wordsText, embedUrl }
+
+            const response = await fetch("/api/create-words", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(message),
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to send words.");
+            }
+
+            setIsCastSuccess(true);
+        } catch (error) {
+            setIsCastSuccess(false);
+            setError(`Failed to send words. Please try again: ${error}`);
+        }
+    };
+
+    useEffect(() => {
+        if (isConfirmed && isCastSuccess) {
+            setWordsText("");
+            setIsCastSuccess(false);
+        }
+    }, [isCastSuccess, isConfirmed]);
+
+    const saveGifImageBlob = async (): Promise<Blob> => {
+        if (!quoteCardRef.current || !containerRef.current || !wordsText) return Promise.reject("Missing required elements");
+    
+        setIsGIFLoading(true);
+    
+        const gif = new GIF({
+            workers: 2,
+            quality: 10,
+            workerScript: "./js/gif.worker.js", // Adjust path if needed
+        });
+    
+        try {
+            const frames = 20; // Number of frames for animation
+            const duration = 200; // Delay between frames in milliseconds
+            const squareSize = 350; // Fixed square dimension for the GIF output
+    
+            for (let i = 0; i < frames; i++) {
+                // Update Three.js scene animation
+                if (particlesRef.current) {
+                    particlesRef.current.rotation.y += 0.01; // Rotate particles
+                }
+    
+                // Capture Three.js scene to canvas
+                const threeCanvas = document.createElement("canvas");
+                threeCanvas.width = squareSize;
+                threeCanvas.height = squareSize;
+                const threeContext = threeCanvas.getContext("2d");
+                if (threeContext && rendererRef.current) {
+                    const { offsetWidth, offsetHeight } = containerRef.current!;
+                    const scale = Math.max(squareSize / offsetWidth, squareSize / offsetHeight); // Scale to fit square
+                    const xOffset = (offsetWidth * scale - squareSize) / 2;
+                    const yOffset = (offsetHeight * scale - squareSize) / 2;
+    
+                    threeContext.drawImage(
+                        rendererRef.current.domElement,
+                        -xOffset,
+                        -yOffset,
+                        offsetWidth * scale,
+                        offsetHeight * scale
+                    );
+                }
+    
+                // Capture quote card to canvas
+                const quoteCardCanvas = await html2canvas(quoteCardRef.current, {
+                    useCORS: true,
+                    backgroundColor: null, // Transparent background
+                });
+    
+                const combinedCanvas = document.createElement("canvas");
+                combinedCanvas.width = squareSize;
+                combinedCanvas.height = squareSize;
+                const combinedContext = combinedCanvas.getContext("2d");
+    
+                if (combinedContext) {
+                    // Draw the Three.js scene on the square canvas
+                    combinedContext.drawImage(threeCanvas, 0, 0, squareSize, squareSize);
+    
+                    // Scale and center the quote card on the square canvas
+                    const quoteScale = Math.max(squareSize / quoteCardCanvas.width, squareSize / quoteCardCanvas.height);
+                    const xOffset = (quoteCardCanvas.width * quoteScale - squareSize) / 2;
+                    const yOffset = (quoteCardCanvas.height * quoteScale - squareSize) / 2;
+    
+                    combinedContext.drawImage(
+                        quoteCardCanvas,
+                        -xOffset,
+                        -yOffset,
+                        quoteCardCanvas.width * quoteScale,
+                        quoteCardCanvas.height * quoteScale
+                    );
+                }
+    
+                // Add the combined frame to the GIF
+                gif.addFrame(combinedCanvas, { delay: duration });
+            }
+    
+            // Return the GIF Blob as a Promise
+            return new Promise((resolve) => {
+                gif.on("finished", (blob: Blob) => {
+                    resolve(blob);
+                });
+    
+                gif.render();
+            });
+        } catch (error) {
+            console.error("Error generating GIF:", error);
+            setIsGIFLoading(false);
+            return Promise.reject(error);
+        }
+    };
+
+    const saveGifImageHash = async () => {
+        try {
+            const blob = await saveGifImageBlob();
+
+            if (blob) {
+                // Wrap the Blob with a MIME type (image/gif)
+                const gifBlob = new Blob([blob], { type: "image/gif" });
+
+                // Get a timestamp for the filename
+                const utcDateTimeString = utcDateTime.getUTCDateTime();
+                const formData = new FormData();
+                formData.append("file", gifBlob, `wordsoftheday-${utcDateTimeString}.gif`);
+
+                // Make the API request to Pinata
+                const response = await fetch("/api/pinata-upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    return data.ipfsHash; // Return the IPFS hash
+                } else {
+                    console.error("Something went wrong:", data);
+                }
+            }
+
+        } catch (err) {
+            console.error("Error uploading file:", err);
+        }
+    };
+
+
+    const handleMint = async () => {
+
+        try {
+            const ipfsImageHash = await saveGifImageHash();
+
+            setIsGIFLoading(false);
+
+            if (ipfsImageHash) {
+                // Call the mint contract
+                wordsWrite({
+                    abi: wotdayAbi,
+                    chainId: base.id,
+                    address: wotdayAddress as `0x${string}`,
+                    functionName: "mint",
+                    value: mintPrice,
+                    args: [wordsText, `ipfs://${ipfsImageHash}`, pfpUrl as string, username as string, String(fid)],
+                });
+
+            } else {
+                console.error("Failed to mint animation to base");
+            }
+
+            setIsCastLoading(true)
+
+            await new Promise((resolve) => setTimeout(resolve, 2000)) // 2 seconds delay
+            await sendWords(wordsText, `https://gateway.pinata.cloud/ipfs/${ipfsImageHash}`)
+
+            setIsCastLoading(false)
+
+        } catch (error) {
+            console.error("Error during minting or sharing:", (error as Error).message);
+        }
+    };
+
+
+    return (
+        <div className="relative w-full mx-auto min-h-screen flex flex-col justify-center items-center space-y-3">
+
+            {/* Three.js container */}
+            <div
+                ref={containerRef}
+                className="absolute w-full h-full z-0"
+            />
+
+            {/* Quote Card */}
+            {wordsText && (
+                <div
+                    ref={quoteCardRef}
+                    className="absolute top-8 p-4 z-10 w-full max-w-[400px] h-[400px] mx-auto rounded-xl flex justify-center items-center overflow-hidden"
+                >
+                    <div className="relative bg-[#230b36fa] backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
+                        <p className="text-sm font-semibold mb-4">{wordsText}</p>
+                        <p className="italic text-xs text-gray-400">@{username}</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Transaction Success */}
+            {showMintSuccess && (
+                <div onClick={() => setShowMintSuccess(false)}
+                    className="absolute inset-0 p-4 z-10 w-full max-w-[350px] h-[350px] mx-auto rounded-xl flex justify-center items-center overflow-hidden"
+                >
+                    <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
+                        <p className="text-center text-white p-4">🎉Mint Success🎉</p>
+                        <button
+                            className="w-full max-w-40 mx-auto p-3 rounded-xl bg-gradient-to-r from-[#2f1b3a] to-[#4f2d61] shadow-lg disabled:cursor-not-allowed"
+                            onClick={() => linkToBaseScan(wordsHash)}
+                        >
+                            Proof
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Form Section */}
+            <div className="absolute bottom-5 z-10 w-full max-w-[400px] mx-auto p-2">
+                <div className="relative flex flex-col dark:bg-[#222121] p-4 rounded-2xl space-y-3">
+                    <Label htmlFor="wordsText" className="block text-sm font-medium" />
+                    <Textarea
+                        id="wordsText"
+                        value={wordsText}
+                        onChange={handleTextChange}
+                        className="bg-transparent rounded-xl caret-white mt-2"
+                        placeholder="What's words today?"
+                        rows={4}
+                    />
+                    {error && <p className="text-red-500 p-3 text-sm">{error}</p>}
+                    {wordsText.length > 160 && (
+                        <p className="text-red-500 p-3 text-sm">Text must be 160 characters or less</p>
+                    )}
+                    {isConnected && chainId === base.id ? (
+                        <Button
+                            onClick={handleMint}
+                            disabled={!isConnected || isGIFLoading || isWordsPending || isConfirming || chainId !== base.id || !wordsText || wordsText.length > 160}
+                            className="w-full mt-4 h-12 dark:bg-[#36155f] rounded-xl"
+                        >
+                            {isGIFLoading ? "Create GIF..." : isWordsPending ? "Confirming..." : isConfirming ? "Waiting..." : isCastLoading ? "Casting..." : "Mint Words"}
+                        </Button>
+                    ) : (
+                        <Button
+                            className="w-full mt-4 h-12 dark:bg-[#36155f] rounded-xl"
+                            onClick={() => connect({ connector: config.connectors[0] })}>
+                            Sig In
+                        </Button>
+                    )}
+                </div>
+            </div>
+
+            {/* Transaction Error */}
+            {showError && wordsError && (
+                <div onClick={() => setShowError(false)} className="fixed flex p-4 inset-0 items-center justify-center z-50 bg-gray-900 bg-opacity-65">
+                    <div className="w-full h-full items-center justify-center rounded-lg p-4 flex max-h-[360px] max-w-[360px] mx-auto bg-[#250f31] space-y-4">
+                        <p className="text-center text-white">Error: {(wordsError as BaseError).shortMessage || wordsError.message}</p>
+                    </div>
+                </div>
+            )}
+
+        </div>
+
+    );
+}
