@@ -325,8 +325,17 @@ export default function Home() {
         </div>
       )}
 
+      {/* Transaction Error */}
+      {showError && wordsError && (
+        <div onClick={() => setShowError(false)} className="absolute inset-0 p-4 z-10 w-full max-w-[400px] h-[400px] mx-auto rounded-xl flex justify-center items-center overflow-hidden">
+          <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
+            <p className="text-center text-white p-4">Error: {(wordsError as BaseError).shortMessage || wordsError.message}</p>
+          </div>
+        </div>
+      )}
+
       {/* Form Section */}
-      <div className="absolute bottom-8 z-10 w-full max-w-[400px] mx-auto p-2">
+      <div className="absolute bottom-8 z-50 w-full max-w-[400px] mx-auto p-2">
         <div className="relative flex flex-col dark:bg-[#222121] p-4 rounded-2xl space-y-3">
           <Label htmlFor="wordsText" className="block text-sm font-medium" />
           <Textarea
@@ -358,15 +367,6 @@ export default function Home() {
           )}
         </div>
       </div>
-
-      {/* Transaction Error */}
-      {showError && wordsError && (
-        <div onClick={() => setShowError(false)} className="fixed flex p-4 inset-0 items-center justify-center z-50 bg-gray-900 bg-opacity-65">
-          <div className="w-full h-full items-center justify-center rounded-lg p-4 flex max-h-[360px] max-w-[360px] mx-auto bg-[#250f31] space-y-4">
-            <p className="text-center text-white">Error: {(wordsError as BaseError).shortMessage || wordsError.message}</p>
-          </div>
-        </div>
-      )}
     </main>
   )
 }
