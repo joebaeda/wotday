@@ -131,38 +131,41 @@ export default function Home() {
   }, [isCastSuccess, isConfirmed]);
 
   const saveGifImageBlob = async (): Promise<Blob> => {
-    if (!quoteCardRef.current || !containerRef.current || !wordsText) return Promise.reject("Missing required elements");
-
+    if (!quoteCardRef.current || !containerRef.current || !wordsText) {
+      return Promise.reject("Missing required elements");
+    }
+  
     setIsGIFLoading(true);
-
+  
     const gif = new GIF({
       workers: 2,
       quality: 10,
       workerScript: "./js/gif.worker.js", // Adjust path if needed
     });
-
+  
     try {
       const frames = 20; // Number of frames for animation
       const duration = 200; // Delay between frames in milliseconds
       const squareSize = 350; // Fixed square dimension for the GIF output
-
+  
       for (let i = 0; i < frames; i++) {
-        // Update Three.js scene animation
+        // Rotate particles in the Three.js scene
         if (particlesRef.current) {
           particlesRef.current.rotation.y += 0.01; // Rotate particles
         }
-
-        // Capture Three.js scene to canvas
+  
+        // Capture Three.js scene to a square canvas
         const threeCanvas = document.createElement("canvas");
         threeCanvas.width = squareSize;
         threeCanvas.height = squareSize;
         const threeContext = threeCanvas.getContext("2d");
+  
         if (threeContext && rendererRef.current) {
           const { offsetWidth, offsetHeight } = containerRef.current!;
-          const scale = Math.max(squareSize / offsetWidth, squareSize / offsetHeight); // Scale to fit square
+          const scale = Math.max(squareSize / offsetWidth, squareSize / offsetHeight); // Fit Three.js scene to square
           const xOffset = (offsetWidth * scale - squareSize) / 2;
           const yOffset = (offsetHeight * scale - squareSize) / 2;
-
+  
           threeContext.drawImage(
             rendererRef.current.domElement,
             -xOffset,
@@ -171,46 +174,54 @@ export default function Home() {
             offsetHeight * scale
           );
         }
-
-        // Capture quote card to canvas
+  
+        // Capture quote card as a canvas
         const quoteCardCanvas = await html2canvas(quoteCardRef.current, {
           useCORS: true,
           backgroundColor: null, // Transparent background
         });
-
+  
+        // Create the combined canvas
         const combinedCanvas = document.createElement("canvas");
         combinedCanvas.width = squareSize;
         combinedCanvas.height = squareSize;
         const combinedContext = combinedCanvas.getContext("2d");
-
+  
         if (combinedContext) {
           // Draw the Three.js scene on the square canvas
           combinedContext.drawImage(threeCanvas, 0, 0, squareSize, squareSize);
-
+  
           // Scale and center the quote card on the square canvas
-          const quoteScale = Math.max(squareSize / quoteCardCanvas.width, squareSize / quoteCardCanvas.height);
-          const xOffset = (quoteCardCanvas.width * quoteScale - squareSize) / 2;
-          const yOffset = (quoteCardCanvas.height * quoteScale - squareSize) / 2;
-
+          const quoteScale = Math.min(
+            squareSize / quoteCardCanvas.width,
+            squareSize / quoteCardCanvas.height
+          ); // Scale to fit inside the square
+          const cardWidth = quoteCardCanvas.width * quoteScale;
+          const cardHeight = quoteCardCanvas.height * quoteScale;
+  
+          const cardX = (squareSize - cardWidth) / 2; // Center horizontally
+          const cardY = (squareSize - cardHeight) / 2; // Center vertically
+  
           combinedContext.drawImage(
             quoteCardCanvas,
-            -xOffset,
-            -yOffset,
-            quoteCardCanvas.width * quoteScale,
-            quoteCardCanvas.height * quoteScale
+            cardX,
+            cardY,
+            cardWidth,
+            cardHeight
           );
         }
-
+  
         // Add the combined frame to the GIF
         gif.addFrame(combinedCanvas, { delay: duration });
       }
-
-      // Return the GIF Blob as a Promise
+  
+      // Render and return the GIF Blob
       return new Promise((resolve) => {
         gif.on("finished", (blob: Blob) => {
+          setIsGIFLoading(false);
           resolve(blob);
         });
-
+  
         gif.render();
       });
     } catch (error) {
@@ -218,7 +229,7 @@ export default function Home() {
       setIsGIFLoading(false);
       return Promise.reject(error);
     }
-  };
+  };  
 
   const saveGifImageHash = async () => {
     try {
@@ -286,6 +297,7 @@ export default function Home() {
       console.error("Error during minting or sharing:", (error as Error).message);
     }
   };
+
   return (
     <main className="relative w-full min-h-screen flex flex-col justify-center items-center space-y-3 bg-[#1a1a1a] text-white">
 
@@ -299,7 +311,7 @@ export default function Home() {
       {wordsText && (
         <div
           ref={quoteCardRef}
-          className="absolute top-24 mx-auto p-4 z-10 w-full max-w-[350px] max-h-[350px] rounded-xl flex justify-center items-center overflow-hidden"
+          className="absolute top-24 mx-auto p-4 z-10 w-full max-w-[400px] max-h-[400px] rounded-xl flex justify-center items-center overflow-hidden"
         >
           <div className="relative bg-[#230b36fa] backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
             <p className="text-sm font-semibold mb-4">{wordsText}</p>
