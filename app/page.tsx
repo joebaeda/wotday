@@ -12,10 +12,8 @@ import { BaseError, useAccount, useChainId, useConnect, useReadContract, useWait
 import { wotdayAbi, wotdayAddress } from "@/lib/wotday";
 import { base } from "viem/chains";
 import utcDateTime from "@/lib/utcDateTime";
-import sdk, { FrameNotificationDetails } from "@farcaster/frame-sdk";
+import sdk from "@farcaster/frame-sdk";
 import { config } from "@/lib/config";
-import { setUserNotificationDetails } from "@/lib/kv";
-import { sendFrameNotification } from "@/lib/notify";
 
 export default function Home() {
   const [wordsText, setWordsText] = useState<string>("");
@@ -80,25 +78,9 @@ export default function Home() {
   // Subscribe to Frames
   useEffect(() => {
     if (!added) {
-      async function subscribeToFrames() {
-        try {
-          const subscribe = await sdk.actions.addFrame()
-          if (subscribe) {
-            await setUserNotificationDetails(fid, subscribe as FrameNotificationDetails)
-            await sendFrameNotification({
-                      fid,
-                      title: "Welcome to Words of the Day!",
-                      body: "Words of the Day Frame is now added to your client",
-                      targetUrl: "https://wotday.xyz",
-                    });
-          }
-        } catch (err) {
-          console.log(err)
-        }
+      sdk.actions.addFrame()
     }
-    subscribeToFrames()
-  }
-  },[added, fid])
+  }, [added])
 
   useEffect(() => {
     if (isConfirmed) {
@@ -305,89 +287,86 @@ export default function Home() {
     }
   };
   return (
-    <main className="relative w-full bg-[#1d1429e3] min-h-screen bg-[radial-gradient(#290f51_1px,transparent_1px)] [background-size:16px_16px]">
-      <div className="relative w-full mx-auto flex flex-col justify-center items-center space-y-3">
+    <main className="relative w-full min-h-screen mx-auto flex flex-col justify-center items-center space-y-3">
 
-        {/* Three.js container */}
+      {/* Three.js container */}
+      <div
+        ref={containerRef}
+        className="absolute w-full h-full z-0"
+      />
+
+      {/* Quote Card */}
+      {wordsText && (
         <div
-          ref={containerRef}
-          className="absolute w-full h-full z-0"
-        />
-
-        {/* Quote Card */}
-        {wordsText && (
-          <div
-            ref={quoteCardRef}
-            className="absolute top-8 p-4 z-10 w-full max-w-[400px] h-[400px] mx-auto rounded-xl flex justify-center items-center overflow-hidden"
-          >
-            <div className="relative bg-[#230b36fa] backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
-              <p className="text-sm font-semibold mb-4">{wordsText}</p>
-              <p className="italic text-xs text-gray-400">@{username}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Transaction Success */}
-        {showMintSuccess && (
-          <div onClick={() => setShowMintSuccess(false)}
-            className="absolute inset-0 p-4 z-10 w-full max-w-[350px] h-[350px] mx-auto rounded-xl flex justify-center items-center overflow-hidden"
-          >
-            <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
-              <p className="text-center text-white p-4">🎉Mint Success🎉</p>
-              <button
-                className="w-full max-w-40 mx-auto p-3 rounded-xl bg-gradient-to-r from-[#2f1b3a] to-[#4f2d61] shadow-lg disabled:cursor-not-allowed"
-                onClick={() => linkToBaseScan(wordsHash)}
-              >
-                Proof
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Form Section */}
-        <div className="absolute bottom-5 z-10 w-full max-w-[400px] mx-auto p-2">
-          <div className="relative flex flex-col dark:bg-[#222121] p-4 rounded-2xl space-y-3">
-            <Label htmlFor="wordsText" className="block text-sm font-medium" />
-            <Textarea
-              id="wordsText"
-              value={wordsText}
-              onChange={handleTextChange}
-              className="bg-transparent rounded-xl caret-white mt-2"
-              placeholder="What's words today?"
-              rows={4}
-            />
-            {error && <p className="text-red-500 p-3 text-sm">{error}</p>}
-            {wordsText.length > 160 && (
-              <p className="text-red-500 p-3 text-sm">Text must be 160 characters or less</p>
-            )}
-            {isConnected && chainId === base.id ? (
-              <Button
-                onClick={handleMint}
-                disabled={!isConnected || isGIFLoading || isWordsPending || isConfirming || chainId !== base.id || !wordsText || wordsText.length > 160}
-                className="w-full mt-4 h-12 dark:bg-[#36155f] rounded-xl"
-              >
-                {isGIFLoading ? "Create GIF..." : isWordsPending ? "Confirming..." : isConfirming ? "Waiting..." : isCastLoading ? "Casting..." : "Mint Words"}
-              </Button>
-            ) : (
-              <Button
-                className="w-full mt-4 h-12 dark:bg-[#36155f] rounded-xl"
-                onClick={() => connect({ connector: config.connectors[0] })}>
-                Sig In
-              </Button>
-            )}
+          ref={quoteCardRef}
+          className="absolute top-8 p-4 z-10 w-full max-w-[400px] h-[400px] mx-auto rounded-xl flex justify-center items-center overflow-hidden"
+        >
+          <div className="relative bg-[#230b36fa] backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
+            <p className="text-sm font-semibold mb-4">{wordsText}</p>
+            <p className="italic text-xs text-gray-400">@{username}</p>
           </div>
         </div>
+      )}
 
-        {/* Transaction Error */}
-        {showError && wordsError && (
-          <div onClick={() => setShowError(false)} className="fixed flex p-4 inset-0 items-center justify-center z-50 bg-gray-900 bg-opacity-65">
-            <div className="w-full h-full items-center justify-center rounded-lg p-4 flex max-h-[360px] max-w-[360px] mx-auto bg-[#250f31] space-y-4">
-              <p className="text-center text-white">Error: {(wordsError as BaseError).shortMessage || wordsError.message}</p>
-            </div>
+      {/* Transaction Success */}
+      {showMintSuccess && (
+        <div onClick={() => setShowMintSuccess(false)}
+          className="absolute inset-0 p-4 z-10 w-full max-w-[350px] h-[350px] mx-auto rounded-xl flex justify-center items-center overflow-hidden"
+        >
+          <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
+            <p className="text-center text-white p-4">🎉Mint Success🎉</p>
+            <button
+              className="w-full max-w-40 mx-auto p-3 rounded-xl bg-gradient-to-r from-[#2f1b3a] to-[#4f2d61] shadow-lg disabled:cursor-not-allowed"
+              onClick={() => linkToBaseScan(wordsHash)}
+            >
+              Proof
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
+      {/* Form Section */}
+      <div className="absolute bottom-8 z-10 w-full max-w-[400px] mx-auto p-2">
+        <div className="relative flex flex-col dark:bg-[#222121] p-4 rounded-2xl space-y-3">
+          <Label htmlFor="wordsText" className="block text-sm font-medium" />
+          <Textarea
+            id="wordsText"
+            value={wordsText}
+            onChange={handleTextChange}
+            className="bg-transparent rounded-xl caret-white mt-2"
+            placeholder="What's words today?"
+            rows={4}
+          />
+          {error && <p className="text-red-500 p-3 text-sm">{error}</p>}
+          {wordsText.length > 160 && (
+            <p className="text-red-500 p-3 text-sm">Text must be 160 characters or less</p>
+          )}
+          {isConnected && chainId === base.id ? (
+            <Button
+              onClick={handleMint}
+              disabled={!isConnected || isGIFLoading || isWordsPending || isConfirming || chainId !== base.id || !wordsText || wordsText.length > 160}
+              className="w-full mt-4 h-12 dark:bg-[#36155f] rounded-xl"
+            >
+              {isGIFLoading ? "Create GIF..." : isWordsPending ? "Confirming..." : isConfirming ? "Waiting..." : isCastLoading ? "Casting..." : "Mint Words"}
+            </Button>
+          ) : (
+            <Button
+              className="w-full mt-4 h-12 dark:bg-[#36155f] rounded-xl"
+              onClick={() => connect({ connector: config.connectors[0] })}>
+              Sig In
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Transaction Error */}
+      {showError && wordsError && (
+        <div onClick={() => setShowError(false)} className="fixed flex p-4 inset-0 items-center justify-center z-50 bg-gray-900 bg-opacity-65">
+          <div className="w-full h-full items-center justify-center rounded-lg p-4 flex max-h-[360px] max-w-[360px] mx-auto bg-[#250f31] space-y-4">
+            <p className="text-center text-white">Error: {(wordsError as BaseError).shortMessage || wordsError.message}</p>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
