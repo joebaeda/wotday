@@ -299,7 +299,7 @@ export default function Home() {
       {wordsText && (
         <div
           ref={quoteCardRef}
-          className="absolute top-8 md:top-12 p-4 z-10 w-[90%] max-w-[400px] h-auto rounded-xl flex justify-center items-center overflow-hidden"
+          className="absolute top-24 mx-auto p-4 z-10 w-[90%] max-w-[400px] h-auto rounded-xl flex justify-center items-center overflow-hidden"
         >
           <div className="relative bg-[#230b36fa] backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
             <p className="text-sm font-semibold mb-4">{wordsText}</p>
