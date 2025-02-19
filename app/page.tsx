@@ -12,8 +12,10 @@ import { BaseError, useAccount, useChainId, useConnect, useReadContract, useWait
 import { wotdayAbi, wotdayAddress } from "@/lib/wotday";
 import { base } from "viem/chains";
 import utcDateTime from "@/lib/utcDateTime";
-import sdk from "@farcaster/frame-sdk";
+import sdk, { FrameNotificationDetails } from "@farcaster/frame-sdk";
 import { config } from "@/lib/config";
+import { setUserNotificationDetails } from "@/lib/kv";
+import { sendFrameNotification } from "@/lib/notify";
 
 export default function Home() {
   const [wordsText, setWordsText] = useState<string>("");
@@ -24,7 +26,7 @@ export default function Home() {
   const [showMintSuccess, setShowMintSuccess] = useState(false);
   const [isCastLoading, setIsCastLoading] = useState(false);
 
-  const { pfpUrl, username, fid, added } = useViewer();
+  const { pfpUrl, username, fid, url, token } = useViewer();
   const { containerRef, rendererRef, particlesRef } = useAnimationFrames({
     pfpUrl: pfpUrl as string,
   });
@@ -75,12 +77,28 @@ export default function Home() {
     }
   }, []);
 
-  // Open Add Frame dialog
+  // Subscribe to Frames
   useEffect(() => {
-    if (added === false) {
-      sdk.actions.addFrame()
+    if (url === "" && token === "") {
+      async function subscribeToFrames() {
+        try {
+          const subscribe = await sdk.actions.addFrame()
+          if (subscribe) {
+            await setUserNotificationDetails(fid, subscribe as FrameNotificationDetails)
+            await sendFrameNotification({
+                      fid,
+                      title: "Welcome to Words of the Day!",
+                      body: "Words of the Day Frame is now added to your client",
+                      targetUrl: "https://wotday.xyz",
+                    });
+          }
+        } catch (err) {
+          console.log(err)
+        }
     }
-  })
+    subscribeToFrames()
+  }
+  },[fid, token, url])
 
   useEffect(() => {
     if (isConfirmed) {
