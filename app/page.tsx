@@ -312,7 +312,7 @@ export default function Home() {
       {showMintSuccess && (
         <div
           onClick={() => setShowMintSuccess(false)}
-          className="absolute inset-0 flex items-center justify-center p-4 z-10 w-full max-w-[90%] md:max-w-[350px] h-auto rounded-xl"
+          className="absolute inset-0 mx-auto flex items-center justify-center p-4 z-10 w-full max-w-[90%] md:max-w-[400px] h-auto rounded-xl"
         >
           <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
             <p className="text-center text-white p-4">🎉Mint Success🎉</p>
@@ -330,7 +330,7 @@ export default function Home() {
       {showError && wordsError && (
         <div
           onClick={() => setShowError(false)}
-          className="absolute inset-0 flex items-center justify-center p-4 z-10 w-full max-w-[90%] md:max-w-[400px] h-auto rounded-xl"
+          className="absolute inset-0 mx-auto flex items-center justify-center p-4 z-10 w-full max-w-[90%] md:max-w-[400px] h-auto rounded-xl"
         >
           <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
             <p className="text-center text-white p-4">
