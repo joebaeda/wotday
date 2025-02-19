@@ -26,7 +26,7 @@ export default function Home() {
   const [showMintSuccess, setShowMintSuccess] = useState(false);
   const [isCastLoading, setIsCastLoading] = useState(false);
 
-  const { pfpUrl, username, fid, url, token } = useViewer();
+  const { pfpUrl, username, fid, added } = useViewer();
   const { containerRef, rendererRef, particlesRef } = useAnimationFrames({
     pfpUrl: pfpUrl as string,
   });
@@ -79,7 +79,7 @@ export default function Home() {
 
   // Subscribe to Frames
   useEffect(() => {
-    if (url === "" && token === "") {
+    if (!added) {
       async function subscribeToFrames() {
         try {
           const subscribe = await sdk.actions.addFrame()
@@ -98,7 +98,7 @@ export default function Home() {
     }
     subscribeToFrames()
   }
-  },[fid, token, url])
+  },[added, fid])
 
   useEffect(() => {
     if (isConfirmed) {
@@ -306,7 +306,7 @@ export default function Home() {
   };
   return (
     <main className="relative w-full bg-[#1d1429e3] min-h-screen bg-[radial-gradient(#290f51_1px,transparent_1px)] [background-size:16px_16px]">
-      <div className="relative w-full mx-auto min-h-screen flex flex-col justify-center items-center space-y-3">
+      <div className="relative w-full mx-auto flex flex-col justify-center items-center space-y-3">
 
         {/* Three.js container */}
         <div
