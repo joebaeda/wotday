@@ -90,6 +90,40 @@ export default function WotDayWeb() {
 
   return (
     <main className="w-full bg-[#1d1429e3] min-h-screen bg-[radial-gradient(#290f51_1px,transparent_1px)] [background-size:16px_16px] flex flex-col items-center justify-center">
+      {/* Top Navigation Arrows and Link */}
+      <div className="absolute top-8 flex justify-between w-full px-4 items-center">
+        {/* Left Arrow */}
+        <button
+          onClick={handlePrev}
+          className="bg-gray-700 hover:bg-gray-600 text-white rounded-full p-2"
+          disabled={tokenId <= 1}
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+
+        {/* Link to Original Animation */}
+        {animationURIs && (
+          <a
+            href={`https://opensea.io/item/base/0xb3f984a254fcb627ea04420837d37cee37d09ce8/${tokenId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white bg-gray-700 hover:bg-gray-600 rounded-full px-4 py-2 flex items-center space-x-2"
+          >
+            <ExternalLink className="w-5 h-5" />
+            <span>Make a Bid</span>
+          </a>
+        )}
+
+        {/* Right Arrow */}
+        <button
+          onClick={handleNext}
+          className="bg-gray-700 disabled:hidden hover:bg-gray-600 text-white rounded-full p-2"
+          disabled={tokenId >= maxTokenId}
+        >
+          <ArrowRight className="w-6 h-6" />
+        </button>
+      </div>
+
       {/* Words of the Day detail */}
       <div className="relative w-full h-full flex items-center justify-center">
         {isLoading ? (
@@ -111,7 +145,7 @@ export default function WotDayWeb() {
         )}
       </div>
 
-      {/* Navigation Arrows and Link */}
+      {/* Bottom Navigation Arrows and Link */}
       <div className="absolute bottom-8 flex justify-between w-full px-4 items-center">
         {/* Left Arrow */}
         <button
