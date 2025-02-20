@@ -60,7 +60,7 @@ export default function WordsDetails({
         if (authorName) {
             async function getAuthorFID() {
                 try {
-                    const response = await fetch(`/api/user-fid-by?fname=${authorName}`);
+                    const response = await fetch(`/api/user-fid-by?fname=${authorName.replace("@", "")}`);
                     const data = await response.json();
                     setAuthorFID(data.fid || null);
                 } catch {
@@ -126,14 +126,14 @@ export default function WordsDetails({
 
 
                         <button
-                            className="w-full py-4 bg-[#342047] text-white text-lg rounded-2xl font-semibold hover:bg-[#502f6e] transition"
+                            className="w-full py-4 bg-gradient-to-r from-[#36155f] to-[#542173] text-white text-lg rounded-2xl font-semibold hover:bg-[#502f6e] transition"
                             onClick={() => linkToMarket(tokenId)}
                         >
                             Collect
                         </button>
 
                         <button
-                            className="w-full py-4 bg-[#342047] text-white text-lg rounded-2xl font-semibold hover:bg-[#502f6e] transition"
+                            className="w-full py-4 bg-gradient-to-r from-[#36155f] to-[#542173] text-white text-lg rounded-2xl font-semibold hover:bg-[#502f6e] transition"
                             onClick={() => linkToGIFImage(imageURIs)}
                         >
                             Download GIF

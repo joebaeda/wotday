@@ -1,7 +1,6 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { Label } from "./components/ui/label";
 import { Button } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
 import { useViewer } from "./providers/FrameContextProvider";
@@ -14,6 +13,7 @@ import { base } from "viem/chains";
 import utcDateTime from "@/lib/utcDateTime";
 import sdk from "@farcaster/frame-sdk";
 import { config } from "@/lib/config";
+import { Label } from "./components/ui/label";
 
 export default function Home() {
   const [wordsText, setWordsText] = useState<string>("");
@@ -134,38 +134,38 @@ export default function Home() {
     if (!quoteCardRef.current || !containerRef.current || !wordsText) {
       return Promise.reject("Missing required elements");
     }
-  
+
     setIsGIFLoading(true);
-  
+
     const gif = new GIF({
       workers: 2,
       quality: 10,
       workerScript: "./js/gif.worker.js", // Adjust path if needed
     });
-  
+
     try {
       const frames = 20; // Number of frames for animation
       const duration = 200; // Delay between frames in milliseconds
       const squareSize = 350; // Fixed square dimension for the GIF output
-  
+
       for (let i = 0; i < frames; i++) {
         // Rotate particles in the Three.js scene
         if (particlesRef.current) {
           particlesRef.current.rotation.y += 0.01; // Rotate particles
         }
-  
+
         // Capture Three.js scene to a square canvas
         const threeCanvas = document.createElement("canvas");
         threeCanvas.width = squareSize;
         threeCanvas.height = squareSize;
         const threeContext = threeCanvas.getContext("2d");
-  
+
         if (threeContext && rendererRef.current) {
           const { offsetWidth, offsetHeight } = containerRef.current!;
           const scale = Math.max(squareSize / offsetWidth, squareSize / offsetHeight); // Fit Three.js scene to square
           const xOffset = (offsetWidth * scale - squareSize) / 2;
           const yOffset = (offsetHeight * scale - squareSize) / 2;
-  
+
           threeContext.drawImage(
             rendererRef.current.domElement,
             -xOffset,
@@ -174,23 +174,23 @@ export default function Home() {
             offsetHeight * scale
           );
         }
-  
+
         // Capture quote card as a canvas
         const quoteCardCanvas = await html2canvas(quoteCardRef.current, {
           useCORS: true,
           backgroundColor: null, // Transparent background
         });
-  
+
         // Create the combined canvas
         const combinedCanvas = document.createElement("canvas");
         combinedCanvas.width = squareSize;
         combinedCanvas.height = squareSize;
         const combinedContext = combinedCanvas.getContext("2d");
-  
+
         if (combinedContext) {
           // Draw the Three.js scene on the square canvas
           combinedContext.drawImage(threeCanvas, 0, 0, squareSize, squareSize);
-  
+
           // Scale and center the quote card on the square canvas
           const quoteScale = Math.min(
             squareSize / quoteCardCanvas.width,
@@ -198,10 +198,10 @@ export default function Home() {
           ); // Scale to fit inside the square
           const cardWidth = quoteCardCanvas.width * quoteScale;
           const cardHeight = quoteCardCanvas.height * quoteScale;
-  
+
           const cardX = (squareSize - cardWidth) / 2; // Center horizontally
           const cardY = (squareSize - cardHeight) / 2; // Center vertically
-  
+
           combinedContext.drawImage(
             quoteCardCanvas,
             cardX,
@@ -210,17 +210,17 @@ export default function Home() {
             cardHeight
           );
         }
-  
+
         // Add the combined frame to the GIF
         gif.addFrame(combinedCanvas, { delay: duration });
       }
-  
+
       // Render and return the GIF Blob
       return new Promise((resolve) => {
         gif.on("finished", (blob: Blob) => {
           resolve(blob);
         });
-  
+
         gif.render();
       });
     } catch (error) {
@@ -228,7 +228,7 @@ export default function Home() {
       setIsGIFLoading(false);
       return Promise.reject(error);
     }
-  };  
+  };
 
   const saveGifImageHash = async () => {
     try {
@@ -310,7 +310,7 @@ export default function Home() {
       {wordsText && (
         <div
           ref={quoteCardRef}
-          className="absolute top-24 mx-auto p-4 z-10 w-full max-w-[384px] max-h-[384px] rounded-xl flex justify-center items-center overflow-hidden"
+          className="absolute top-24 mx-auto p-4 z-10 w-full max-w-[90%] md:max-w-[384px] max-h-[384px] rounded-xl flex justify-center items-center overflow-hidden"
         >
           <div className="relative bg-[#230b36fa] backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
             <p className="text-sm font-semibold mb-4">{wordsText}</p>
@@ -323,7 +323,7 @@ export default function Home() {
       {showMintSuccess && (
         <div
           onClick={() => setShowMintSuccess(false)}
-          className="absolute inset-0 mx-auto flex items-center justify-center p-4 z-10 w-full max-w-[350px] max-h-[350px] rounded-xl"
+          className="absolute inset-0 mx-auto flex items-center justify-center p-4 z-10 w-full max-w-[90%] md:max-w-[384px] max-h-[384px] rounded-xl"
         >
           <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
             <p className="text-center text-white p-4">🎉Mint Success🎉</p>
@@ -341,7 +341,7 @@ export default function Home() {
       {showError && wordsError && (
         <div
           onClick={() => setShowError(false)}
-          className="absolute inset-0 mx-auto flex items-center justify-center p-4 z-10 w-full max-w-[350px] max-h-[350px] rounded-xl"
+          className="absolute inset-0 mx-auto flex items-center justify-center p-4 z-10 w-full max-w-[90%] md:max-w-[384px] max-h-[384px] rounded-xl"
         >
           <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
             <p className="text-center text-white p-4">
@@ -352,7 +352,7 @@ export default function Home() {
       )}
 
       {/* Form Section */}
-      <div className="absolute bottom-8 z-50 w-full max-w-[90%] md:max-w-[400px] mx-auto p-2">
+      <div className="absolute bottom-12 z-50 w-full max-w-[90%] md:max-w-[384px] mx-auto p-2">
         <div className="relative flex flex-col bg-[#222121] p-4 rounded-2xl space-y-3 shadow-lg">
           <Label htmlFor="wordsText" className="block text-sm font-medium" />
           <Textarea
