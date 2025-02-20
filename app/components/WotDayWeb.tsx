@@ -91,7 +91,7 @@ export default function WotDayWeb() {
   return (
     <main className="w-full bg-[#1d1429e3] min-h-screen bg-[radial-gradient(#290f51_1px,transparent_1px)] [background-size:16px_16px] flex flex-col items-center justify-center">
       {/* Top Navigation Arrows and Link */}
-      <div className="absolute top-8 flex justify-between w-full px-4 items-center">
+      <div className="absolute z-10 top-8 flex justify-between w-full px-4 items-center">
         {/* Left Arrow */}
         <button
           onClick={handlePrev}
@@ -165,7 +165,7 @@ export default function WotDayWeb() {
             className="text-white bg-gray-700 hover:bg-gray-600 rounded-full px-4 py-2 flex items-center space-x-2"
           >
             <ExternalLink className="w-5 h-5" />
-            <span>View Original</span>
+            <span>View Origin</span>
           </a>
         )}
 
