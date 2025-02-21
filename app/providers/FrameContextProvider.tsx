@@ -3,7 +3,7 @@ import type { FrameContext, SafeAreaInsets } from '@/lib/types';
 import React from 'react';
 
 import { useFrameSplash } from './FrameSplashProvider';
-import WotDayWeb from '../components/WotDayWeb';
+import WotDay from '../components/WotDay';
 
 const FAKE_FRAME_CONTEXT: FrameContext | undefined =
   process.env.NODE_ENV === 'development'
@@ -71,11 +71,11 @@ function FrameContextProvider({ children }: React.PropsWithChildren) {
   }, [checkFrameContext, frameContext]);
 
   if (noFrameContextFound) {
-    return <WotDayWeb />;
+    return <WotDay />;
   }
 
   if (typeof frameContext === 'undefined') {
-    return <WotDayWeb />;
+    return <WotDay />;
   }
 
   return (
