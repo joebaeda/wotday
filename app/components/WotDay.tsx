@@ -179,7 +179,7 @@ export default function WotDay() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Words by author"
+            placeholder="By Farcaster Username"
             className="relative w-full p-4 focus:outline-none rounded-full bg-gray-800 text-white"
           />
           <button
