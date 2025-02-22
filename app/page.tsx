@@ -364,7 +364,7 @@ export default function Home() {
             value={wordsText}
             disabled={!isConnected}
             onChange={handleWordsTextChange}
-            className="p-4 rounded-l-full"
+            className="p-4 bg-[#1d1c1c] rounded-l-full"
             placeholder="What's your words?"
           />
           {isConnected && chainId === base.id ? (
