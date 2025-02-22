@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Button } from "./components/ui/button";
-import { Textarea } from "./components/ui/textarea";
 import { useViewer } from "./providers/FrameContextProvider";
 import useAnimationFrames from "@/hooks/useAnimationFrames";
 import html2canvas from "html2canvas";
@@ -14,6 +13,7 @@ import utcDateTime from "@/lib/utcDateTime";
 import sdk from "@farcaster/frame-sdk";
 import { config } from "@/lib/config";
 import { Label } from "./components/ui/label";
+import { Input } from "./components/ui/input";
 
 export default function Home() {
   const [wordsText, setWordsText] = useState<string>("");
@@ -31,7 +31,7 @@ export default function Home() {
 
   const quoteCardRef = useRef<HTMLDivElement>(null);
 
-  const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+  const handleWordsTextChange = (e: ChangeEvent<HTMLInputElement>) => {
     setWordsText(e.target.value);
   };
 
@@ -270,7 +270,7 @@ export default function Home() {
 
       setIsGIFLoading(false);
 
-      if (ipfsImageHash) {
+      if (ipfsImageHash && wordsText) {
         // Call the mint contract
         wordsWrite({
           abi: wotdayAbi,
@@ -310,7 +310,7 @@ export default function Home() {
       {wordsText && (
         <div
           ref={quoteCardRef}
-          className="absolute top-24 mx-auto p-4 z-10 w-full max-w-[90%] md:max-w-[384px] max-h-[384px] rounded-xl flex justify-center items-center overflow-hidden"
+          className="absolute inset-0 mx-auto p-4 z-10 w-full max-w-[90%] md:max-w-[384px] max-h-[384px] rounded-xl flex justify-center items-center overflow-hidden"
         >
           <div className="relative bg-[#230b36fa] backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
             <p className="text-sm font-semibold mb-4">{wordsText}</p>
@@ -352,21 +352,21 @@ export default function Home() {
       )}
 
       {/* Form Section */}
-      <div className="absolute bottom-12 z-50 w-full max-w-[90%] md:max-w-[384px] mx-auto p-2">
-        <div className="relative flex flex-col bg-[#222121] p-4 rounded-2xl space-y-3 shadow-lg">
+      <div className="fixed bottom-12 z-50 w-full max-w-[90%] md:max-w-[384px] mx-auto p-2">
+        {error && <p className="text-red-500 p-4 text-center text-sm">{error}</p>}
+        {wordsText.length > 160 && (
+          <p className="text-red-500 p-4 text-center text-sm">Word must be 160 characters or less</p>
+        )}
+        <div className="relative flex bg-[#181414] rounded-full flex-row shadow-lg">
           <Label htmlFor="wordsText" className="block text-sm font-medium" />
-          <Textarea
+          <Input
             id="wordsText"
             value={wordsText}
-            onChange={handleTextChange}
-            className="bg-transparent rounded-xl caret-white mt-2"
-            placeholder="What's words today?"
-            rows={4}
+            disabled={!isConnected}
+            onChange={handleWordsTextChange}
+            className="p-4 rounded-l-full"
+            placeholder="What's your words?"
           />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          {wordsText.length > 160 && (
-            <p className="text-red-500 text-sm">Text must be 160 characters or less</p>
-          )}
           {isConnected && chainId === base.id ? (
             <Button
               onClick={handleMint}
@@ -379,7 +379,7 @@ export default function Home() {
                 !wordsText ||
                 wordsText.length > 160
               }
-              className="w-full mt-4 h-12 bg-gradient-to-r from-[#36155f] to-[#542173] rounded-xl"
+              className="w-full p-4 bg-gradient-to-r from-[#36155f] to-[#542173] rounded-r-full"
             >
               {isGIFLoading
                 ? "Creating GIF..."
@@ -393,7 +393,7 @@ export default function Home() {
             </Button>
           ) : (
             <Button
-              className="w-full mt-4 h-12 bg-gradient-to-r from-[#36155f] to-[#542173] rounded-xl"
+              className="w-full p-4 bg-gradient-to-r from-[#36155f] to-[#542173] rounded-r-full"
               onClick={() => connect({ connector: config.connectors[0] })}
             >
               Sign In
