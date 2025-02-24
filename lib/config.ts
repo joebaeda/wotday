@@ -6,7 +6,6 @@ export const config = createConfig({
   chains: [base],
   ssr: true,
   connectors: [
-    //injected(),
     frameConnector(),
   ],
   transports: {
