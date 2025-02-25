@@ -111,6 +111,7 @@ export default function Home() {
     if (isConfirmed && isCastSuccess) {
       setWordsText("");
       setIsCastSuccess(false);
+      setShowForm(false);
     }
   }, [isCastSuccess, isConfirmed]);
 
