@@ -25,7 +25,7 @@ export default function Home() {
   // Bottom Menu
   const [showForm, setShowForm] = useState(false);
 
-  const { pfpUrl, username, displayName, fid, added } = useViewer();
+  const { pfpUrl, username, fid, added } = useViewer();
   const { containerRef } = useAnimationFramesTwo({
     textureUrl: pfpUrl as string,
   });
@@ -146,11 +146,6 @@ export default function Home() {
       <div
         ref={containerRef}
         className="absolute inset-0 z-0"></div>
-
-      {/* Navbar Top */}
-      <div className="fixed w-full h-16 p-4 mx-auto z-20 top-0 rounded-b-2xl flex bg-[#17101f] justify-between items-center">
-        <h2>Hey, {displayName} 👋</h2>
-      </div>
 
       {/* Transaction Success */}
       {showMintSuccess && (
