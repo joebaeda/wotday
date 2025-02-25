@@ -140,7 +140,7 @@ export default function Home() {
   };
 
   return (
-    <main className="relative flex justify-center items-center w-full min-h-screen">
+    <main className="relative flex justify-center items-center w-full min-h-screen text-white">
 
       {/* Three.js Animation container */}
       <div
@@ -148,7 +148,7 @@ export default function Home() {
         className="absolute inset-0 z-0"></div>
 
       {/* Navbar Top */}
-      <div className="fixed w-full h-16 p-4 mx-auto z-20 top-0 rounded-b-2xl flex bg-[#1f1327] justify-between items-center">
+      <div className="fixed w-full h-16 p-4 mx-auto z-20 top-0 rounded-b-2xl flex bg-[#17101f] justify-between items-center">
         <h2>Hey, {displayName} 👋</h2>
       </div>
 
@@ -236,8 +236,8 @@ export default function Home() {
       }
 
       {/* Navbar Bottom */}
-      <div className="fixed flex justify-center items-center w-full h-16 mx-auto z-20 bottom-0 rounded-t-2xl bg-[#1f1327]">
-        <div className="absolute p-4 bottom-0 max-w-40 h-20 mx-auto rounded-t-full bg-[#1f1327]">
+      <div className="fixed flex justify-center items-center w-full h-16 mx-auto z-20 bottom-0 rounded-t-2xl bg-[#17101f]">
+        <div className="absolute p-4 bottom-0 max-w-40 h-20 mx-auto rounded-t-full bg-[#17101f]">
           {showForm ?
             (<Button onClick={() => setShowForm(false)}>
               <X className="w-10 h-10" />
