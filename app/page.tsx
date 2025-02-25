@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { Button } from "./components/ui/button";
 import { useViewer } from "./providers/FrameContextProvider";
-import useAnimationFrames from "@/hooks/useAnimationFrames";
+//import useAnimationFrames from "@/hooks/useAnimationFrames";
 import { BaseError, useAccount, useChainId, useConnect, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { wotdayAbi, wotdayAddress } from "@/lib/wotday";
 import { base } from "viem/chains";
@@ -11,6 +11,8 @@ import sdk from "@farcaster/frame-sdk";
 import { config } from "@/lib/config";
 import { Label } from "./components/ui/label";
 import { Textarea } from "./components/ui/textarea";
+import { SquarePen, X } from "lucide-react";
+import useAnimationFramesTwo from "@/hooks/useAnimationFramesTwo";
 
 export default function Home() {
   const [wordsText, setWordsText] = useState<string>("");
@@ -20,9 +22,12 @@ export default function Home() {
   const [showMintSuccess, setShowMintSuccess] = useState(false);
   const [isCastLoading, setIsCastLoading] = useState(false);
 
-  const { pfpUrl, username, fid, added } = useViewer();
-  const { containerRef } = useAnimationFrames({
-    pfpUrl: pfpUrl as string,
+  // Bottom Menu
+  const [showForm, setShowForm] = useState(false);
+
+  const { pfpUrl, username, displayName, fid, added } = useViewer();
+  const { containerRef } = useAnimationFramesTwo({
+    textureUrl: pfpUrl as string,
   });
 
   const handleWordsTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -137,11 +142,15 @@ export default function Home() {
   return (
     <main className="relative flex justify-center items-center w-full min-h-screen">
 
-      {/* Three.js container */}
+      {/* Three.js Animation container */}
       <div
         ref={containerRef}
-        className="absolute inset-0 z-0"
-      />
+        className="absolute inset-0 z-0"></div>
+
+      {/* Navbar Top */}
+      <div className="fixed w-full h-16 p-4 mx-auto z-20 top-0 rounded-b-2xl flex bg-[#1f1327] justify-between items-center">
+        <h2>Hey, {displayName} 👋</h2>
+      </div>
 
       {/* Transaction Success */}
       {showMintSuccess && (
@@ -150,7 +159,7 @@ export default function Home() {
           className="absolute inset-0 mx-auto flex items-center justify-center p-4 z-10 w-full max-w-[90%] md:max-w-[384px] max-h-[384px] rounded-xl"
         >
           <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
-            <p className="text-center text-white p-4">🎉Mint Success🎉</p>
+            <p className="text-center p-4">🎉Mint Success🎉</p>
             <button
               className="w-full p-3 rounded-xl bg-gradient-to-r from-[#2f1b3a] to-[#4f2d61] shadow-lg disabled:cursor-not-allowed"
               onClick={() => linkToBaseScan(wordsHash)}
@@ -168,7 +177,7 @@ export default function Home() {
           className="absolute inset-0 mx-auto flex items-center justify-center p-4 z-10 w-full max-w-[90%] md:max-w-[384px] max-h-[384px] rounded-xl"
         >
           <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
-            <p className="text-center text-white p-4">
+            <p className="text-center p-4">
               Error: {(wordsError as BaseError).shortMessage || wordsError.message}
             </p>
           </div>
@@ -176,53 +185,71 @@ export default function Home() {
       )}
 
       {/* Form Section */}
-      <div className="fixed bottom-12 z-50 w-full max-w-[90%] md:max-w-[384px] mx-auto p-2">
-        {error && <p className="text-red-500 p-4 text-center text-sm">{error}</p>}
-        {wordsText.length > 160 && (
-          <p className="text-red-500 p-4 text-center text-sm">Word must be 160 characters or less</p>
-        )}
-        <div className="relative flex bg-[#181414] rounded-2xl p-4 flex-col space-y-3 shadow-lg">
-          <Label htmlFor="wordsText" className="block text-sm font-medium" />
-          <Textarea
-            id="wordsText"
-            value={wordsText}
-            disabled={!isConnected}
-            onChange={handleWordsTextChange}
-            className="p-4 bg-[#1d1c1c] text-sm rounded-xl"
-            placeholder="What's your words?"
-            rows={4}
-          />
-          {isConnected && chainId === base.id ? (
-            <Button
-              onClick={handleMint}
-              disabled={
-                !isConnected ||
-                isWordsPending ||
-                isConfirming ||
-                chainId !== base.id ||
-                !wordsText ||
-                wordsText.length > 160
-              }
-              className="w-full p-4 bg-gradient-to-r from-[#36155f] to-[#542173] rounded-xl"
-            >
-              {isWordsPending
-                ? "Confirming..."
-                : isConfirming
-                  ? "Waiting..."
-                  : isCastLoading
-                    ? "Casting..."
-                    : "Mint Words"}
-            </Button>
-          ) : (
-            <Button
-              className="w-full p-4 bg-gradient-to-r from-[#36155f] to-[#542173] rounded-xl"
-              onClick={() => connect({ connector: config.connectors[0] })}
-            >
-              Sign In
-            </Button>
+      {showForm &&
+        <div className="fixed bottom-24 z-50 w-full max-w-[90%] md:max-w-[384px] mx-auto">
+          {error && <p className="text-red-500 p-4 text-center text-sm">{error}</p>}
+          {wordsText.length > 160 && (
+            <p className="text-red-500 p-4 text-center text-sm">Word must be 160 characters or less</p>
           )}
+          <div className="relative flex bg-[#181414] text-slate-300 rounded-2xl p-4 flex-col space-y-3 shadow-lg">
+            <Label htmlFor="wordsText" className="block text-sm font-medium" />
+            <Textarea
+              id="wordsText"
+              value={wordsText}
+              disabled={!isConnected}
+              onChange={handleWordsTextChange}
+              className="p-4 bg-[#1d1c1c] text-sm rounded-xl"
+              placeholder="What's your words?"
+              rows={4}
+            />
+            {isConnected && chainId === base.id ? (
+              <Button
+                onClick={handleMint}
+                disabled={
+                  !isConnected ||
+                  isWordsPending ||
+                  isConfirming ||
+                  chainId !== base.id ||
+                  !wordsText ||
+                  wordsText.length > 160
+                }
+                className="w-full p-4 bg-gradient-to-r from-[#36155f] to-[#542173] rounded-xl"
+              >
+                {isWordsPending
+                  ? "Confirming..."
+                  : isConfirming
+                    ? "Waiting..."
+                    : isCastLoading
+                      ? "Casting..."
+                      : "Mint Words"}
+              </Button>
+            ) : (
+              <Button
+                className="w-full p-4 bg-gradient-to-r from-[#36155f] to-[#542173] rounded-xl"
+                onClick={() => connect({ connector: config.connectors[0] })}
+              >
+                Sign In
+              </Button>
+            )}
+          </div>
+        </div>
+      }
+
+      {/* Navbar Bottom */}
+      <div className="fixed flex justify-center items-center w-full h-16 mx-auto z-20 bottom-0 rounded-t-2xl bg-[#1f1327]">
+        <div className="absolute p-4 bottom-0 max-w-40 h-20 mx-auto rounded-t-full bg-[#1f1327]">
+          {showForm ?
+            (<Button onClick={() => setShowForm(false)}>
+              <X className="w-10 h-10" />
+            </Button>
+            ) : (
+              <Button onClick={() => setShowForm(true)}>
+                <SquarePen className="w-10 h-10" />
+              </Button>
+            )}
         </div>
       </div>
+
     </main>
 
   )
