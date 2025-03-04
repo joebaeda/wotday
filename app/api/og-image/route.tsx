@@ -111,6 +111,9 @@ export async function GET(request: Request) {
           position: 'absolute',
           backgroundImage: `url(${pfp || 'https://wotday.xyz/wotday-logo.jpeg'})`,
           inset: 0,
+          backgroundSize: 'contain', // Keeps original size without cropping
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
           width: '300px',
           height: '300px',
           borderRadius: '20px',
