@@ -93,8 +93,8 @@ export async function GET(request: Request) {
     return new ImageResponse(
       <div
         style={{
-          display: 'flex',
           position: 'relative',
+          display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           width: '100%',
@@ -109,23 +109,20 @@ export async function GET(request: Request) {
       >
         <div style={{
           position: 'absolute',
-          backgroundImage: `url(${pfp || 'https://wotday.xyz/wotday-logo.jpeg'})`,
           inset: 0,
-          backgroundSize: 'contain', // Keeps original size without cropping
+          backgroundImage: `url(${pfp || 'https://wotday.xyz/wotday-logo.jpeg'})`,
+          objectFit: 'contain',
+          borderRadius: '30px',
           backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          width: '300px',
-          height: '300px',
-          borderRadius: '20px',
-          objectFit: 'cover',
-          alignItems: 'center',
+          width: '400px',
+          height: '400px',
           transform: 'rotate(15deg)',
           opacity: 0.3
         }}></div>
         <div
           style={{
-            display: 'flex', // Explicit flex to fix error
             position: 'relative',
+            display: 'flex', // Explicit flex to fix error
             flexDirection: 'column', // Stack the quote and author
             justifyContent: 'center',
             alignItems: 'center',
@@ -139,7 +136,6 @@ export async function GET(request: Request) {
           <p
             style={{
               fontSize: '36px',
-              position: 'relative',
               fontWeight: 'bold',
               margin: 0,
               lineHeight: 1.5,
@@ -152,7 +148,6 @@ export async function GET(request: Request) {
           <p
             style={{
               fontSize: '24px',
-              position: 'relative',
               marginTop: '20px',
               fontStyle: 'italic',
               letterSpacing: '1px',
