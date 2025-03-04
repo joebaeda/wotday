@@ -135,7 +135,7 @@ export async function GET(request: Request) {
         >
           <p
             style={{
-              fontSize: '24px',
+              fontSize: '36px',
               position: 'relative',
               fontWeight: 'bold',
               margin: 0,
@@ -148,7 +148,7 @@ export async function GET(request: Request) {
           </p>
           <p
             style={{
-              fontSize: '20px',
+              fontSize: '24px',
               position: 'relative',
               marginTop: '20px',
               fontStyle: 'italic',
