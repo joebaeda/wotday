@@ -14,10 +14,13 @@ const decodeTokenURI = (base64Uri: string) => {
       author: json.attributes?.find(
         (attr: { trait_type: string }) => attr.trait_type === 'Author'
       )?.value || '',
+      authorFid: json.attributes?.find(
+        (attr: { trait_type: string }) => attr.trait_type === 'Farcaster ID'
+      )?.value || '',
     };
   } catch (error) {
     console.error('Error decoding Base64 tokenURI:', error);
-    return { words: '', author: '' };
+    return { words: '', author: '', authorFid: '' };
   }
 };
 
@@ -59,16 +62,39 @@ export async function GET(request: Request) {
       args: [BigInt(tokenId)],
     });
 
-    const { words, author } = decodeTokenURI(tokenURI);
+    const { words, author, authorFid } = decodeTokenURI(tokenURI);
 
     if (!words && !author) {
       throw new Error('Invalid tokenURI format');
+    }
+
+    const response = await fetch(`https://hub.pinata.cloud/v1/userDataByFid?fid=${authorFid}`)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user data: ${response.statusText}`)
+    }
+
+    const userData = await response.json()
+
+    // Initialize extracted data fields
+    //let name = ""
+    //let fname = ""
+    //let bio = ""
+    let pfp = ""
+
+    // Extract relevant fields
+    for (const message of userData.messages) {
+      const { type, value } = message.data.userDataBody
+      //if (type === "USER_DATA_TYPE_DISPLAY") name = value
+      //if (type === "USER_DATA_TYPE_USERNAME") fname = value
+      //if (type === "USER_DATA_TYPE_BIO") bio = value
+      if (type === "USER_DATA_TYPE_PFP") pfp = value
     }
 
     return new ImageResponse(
       <div
         style={{
           display: 'flex',
+          position: 'relative',
           justifyContent: 'center',
           alignItems: 'center',
           width: '100%',
@@ -77,28 +103,40 @@ export async function GET(request: Request) {
           backgroundSize: '30px 30px',
           background: 'radial-gradient(#e8e1b0 10%, transparent 10%)',
           fontFamily: 'Arial, sans-serif',
-          color: '#fff',
+          color: '#333',
           padding: '30px',
         }}
       >
+        <div style={{
+          position: 'absolute',
+          backgroundImage: `url(${pfp || 'https://wotday.xyz/wotday-logo.jpeg'})`,
+          inset: 0,
+          width: '300px',
+          height: '300px',
+          borderRadius: '20px',
+          objectFit: 'cover',
+          alignItems: 'center',
+          transform: 'rotate(15deg)',
+          opacity: 0.3
+        }}></div>
         <div
           style={{
             display: 'flex', // Explicit flex to fix error
+            position: 'relative',
             flexDirection: 'column', // Stack the quote and author
             justifyContent: 'center',
             alignItems: 'center',
-            background: 'rgba(0, 0, 0, 0.5)',
             borderRadius: '15px',
             padding: '40px',
             maxWidth: '70%',
             textAlign: 'center',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
             backdropFilter: 'blur(10px)',
           }}
         >
           <p
             style={{
-              fontSize: '48px',
+              fontSize: '24px',
+              position: 'relative',
               fontWeight: 'bold',
               margin: 0,
               lineHeight: 1.5,
@@ -110,10 +148,10 @@ export async function GET(request: Request) {
           </p>
           <p
             style={{
-              fontSize: '24px',
+              fontSize: '20px',
+              position: 'relative',
               marginTop: '20px',
               fontStyle: 'italic',
-              color: '#f1f1f1',
               letterSpacing: '1px',
             }}
           >
