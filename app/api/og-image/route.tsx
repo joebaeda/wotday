@@ -34,12 +34,13 @@ export async function GET(request: Request) {
           alignItems: 'center',
           width: '100%',
           height: '100%',
+          backgroundImage: 'url(https://wotday.xyz/og-image.jpg)',
+          objectFit: 'cover',
           backgroundColor: '#f4f4f5',
           fontSize: 24,
           color: '#333',
         }}
       >
-        No Token ID Provided
       </div>,
       { width: 1200, height: 600 }
     );
@@ -77,7 +78,7 @@ export async function GET(request: Request) {
           background: 'radial-gradient(#e8e1b0 10%, transparent 10%)',
           fontFamily: 'Arial, sans-serif',
           color: '#fff',
-          padding: '20px',
+          padding: '30px',
         }}
       >
         <div
@@ -89,7 +90,7 @@ export async function GET(request: Request) {
             background: 'rgba(0, 0, 0, 0.5)',
             borderRadius: '15px',
             padding: '40px',
-            maxWidth: '80%',
+            maxWidth: '70%',
             textAlign: 'center',
             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
             backdropFilter: 'blur(10px)',
@@ -132,12 +133,13 @@ export async function GET(request: Request) {
           alignItems: 'center',
           width: '100%',
           height: '100%',
+          backgroundImage: 'url(https://wotday.xyz/og-image.jpg)',
+          objectFit: 'cover',
           backgroundColor: '#f8d7da',
           fontSize: 24,
           color: '#842029',
         }}
       >
-        Error: Could not fetch token data
       </div>,
       { width: 1200, height: 600 }
     );

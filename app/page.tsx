@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { Button } from "./components/ui/button";
 import { useViewer } from "./providers/FrameContextProvider";
-//import useAnimationFrames from "@/hooks/useAnimationFrames";
 import { BaseError, useAccount, useChainId, useConnect, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { wotdayAbi, wotdayAddress } from "@/lib/wotday";
 import { base } from "viem/chains";
@@ -12,10 +11,11 @@ import { config } from "@/lib/config";
 import { Label } from "./components/ui/label";
 import { Textarea } from "./components/ui/textarea";
 import { SquarePen, X } from "lucide-react";
-import useAnimationFramesTwo from "@/hooks/useAnimationFramesTwo";
+import useAnimationFrames from "@/hooks/useAnimationFrames";
 
 export default function Home() {
   const [wordsText, setWordsText] = useState<string>("");
+  const [wordsCompose, setWordsToCompose] = useState<string>("");
   const [isCastSuccess, setIsCastSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
@@ -26,12 +26,13 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
 
   const { pfpUrl, username, fid, added } = useViewer();
-  const { containerRef } = useAnimationFramesTwo({
+  const { containerRef } = useAnimationFrames({
     textureUrl: pfpUrl as string,
   });
 
   const handleWordsTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setWordsText(e.target.value);
+    setWordsToCompose(e.target.value);
   };
 
   const chainId = useChainId();
@@ -46,6 +47,13 @@ export default function Home() {
     functionName: "mintPrice",
   });
 
+  const { data: tokenId } = useReadContract({
+    address: wotdayAddress as `0x${string}`,
+    abi: wotdayAbi,
+    chainId: base.id,
+    functionName: "totalSupply",
+  });
+
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     hash: wordsHash,
   });
@@ -56,6 +64,13 @@ export default function Home() {
       sdk.actions.openUrl(`https://basescan.org/tx/${hash}`);
     }
   }, []);
+
+  // Basescan
+  const linkToShare = useCallback((tokenId?: number) => {
+    if (tokenId) {
+      sdk.actions.openUrl(`https://warpcast.com/~/compose?text=${wordsCompose}&embeds[]=https://wotday.xyz/${tokenId}`);
+    }
+  }, [wordsCompose]);
 
   // Subscribe to Frames
   useEffect(() => {
@@ -156,12 +171,20 @@ export default function Home() {
         >
           <div className="relative bg-[#230b36cc] bg-opacity-25 backdrop-blur-[10px] text-slate-300 p-6 rounded-2xl shadow-lg text-center">
             <p className="text-center p-4">🎉Mint Success🎉</p>
-            <button
-              className="w-full p-3 rounded-xl bg-gradient-to-r from-[#2f1b3a] to-[#4f2d61] shadow-lg disabled:cursor-not-allowed"
-              onClick={() => linkToBaseScan(wordsHash)}
-            >
-              Proof
-            </button>
+            <div className="flex flex-row space-x-3 justify-center items-center">
+              <button
+                className="w-full p-3 rounded-xl bg-gradient-to-r from-[#2f1b3a] to-[#4f2d61] shadow-lg disabled:cursor-not-allowed"
+                onClick={() => linkToBaseScan(wordsHash)}
+              >
+                Proof
+              </button>
+              <button
+                className="w-full p-3 rounded-xl bg-gradient-to-r from-[#2f1b3a] to-[#4f2d61] shadow-lg disabled:cursor-not-allowed"
+                onClick={() => linkToShare(Number(tokenId) + 1)}
+              >
+                Share
+              </button>
+            </div>
           </div>
         </div>
       )}
